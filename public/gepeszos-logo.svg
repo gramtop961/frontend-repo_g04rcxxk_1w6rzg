@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="28" fill="#10131a"/>
+  <g filter="url(#glow)">
+    <circle cx="128" cy="128" r="76" fill="#0d1b24" stroke="#50eaff" stroke-width="2"/>
+    <path d="M72 128c0-30.9 25.1-56 56-56 30.9 0 56 25.1 56 56s-25.1 56-56 56" stroke="#50eaff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M96 152l32-48 32 48" stroke="#50eaff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <defs>
+    <filter id="glow" x="0" y="0" width="256" height="256" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
