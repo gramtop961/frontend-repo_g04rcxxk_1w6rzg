@@ -24,7 +24,7 @@ function LogoImage() {
   )
 }
 
-export default function Hero() {
+export default function Hero({ lowMotion = false }) {
   const videoRef = useRef(null)
   const beamsRef = useRef(null)
   const orbsRef = useRef(null)
@@ -41,13 +41,26 @@ export default function Hero() {
     return () => v.removeEventListener('error', onError)
   }, [])
 
-  // Parallax mouse movement for depth and immersion
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    if (lowMotion) {
+      try { v.pause() } catch {}
+      v.style.opacity = '0.18'
+    } else {
+      try { v.play() } catch {}
+      v.style.opacity = '0.35'
+    }
+  }, [lowMotion])
+
+  // Parallax mouse movement for depth and immersion (reduced when lowMotion)
   useEffect(() => {
     const handleMove = (e) => {
       const { innerWidth: w, innerHeight: h } = window
       const x = (e.clientX - w / 2) / w
       const y = (e.clientY - h / 2) / h
-      const tx = (d) => `translate3d(${x * d}px, ${y * d}px, 0)`
+      const scalar = lowMotion ? 0.2 : 1
+      const tx = (d) => `translate3d(${x * d * scalar}px, ${y * d * scalar}px, 0)`
       if (beamsRef.current) beamsRef.current.style.transform = tx(-40)
       if (orbsRef.current) orbsRef.current.style.transform = tx(30)
       if (ringsRef.current) ringsRef.current.style.transform = tx(-20)
@@ -55,27 +68,29 @@ export default function Hero() {
     }
     window.addEventListener('mousemove', handleMove)
     return () => window.removeEventListener('mousemove', handleMove)
-  }, [])
+  }, [lowMotion])
 
   // Precompute particle and orb configurations
   const particles = useMemo(() => {
-    return Array.from({ length: 48 }).map((_, i) => ({
+    const n = lowMotion ? 18 : 48
+    return Array.from({ length: n }).map((_, i) => ({
       id: i,
       left: Math.random() * 100,
       size: Math.random() * 2 + 1,
       delay: Math.random() * 4,
-      duration: 6 + Math.random() * 6,
-      opacity: 0.25 + Math.random() * 0.6,
+      duration: (lowMotion ? 10 : 6) + Math.random() * (lowMotion ? 8 : 6),
+      opacity: (lowMotion ? 0.2 : 0.25) + Math.random() * (lowMotion ? 0.4 : 0.6),
     }))
-  }, [])
+  }, [lowMotion])
 
   const orbs = useMemo(() => {
-    return [
-      { size: 360, x: '-15%', y: '10%', hue: 188, alpha: 0.18, blur: 60 },
-      { size: 280, x: '65%', y: '55%', hue: 190, alpha: 0.15, blur: 50 },
-      { size: 220, x: '20%', y: '70%', hue: 185, alpha: 0.12, blur: 40 },
+    const base = [
+      { size: 360, x: '-15%', y: '10%', alpha: 0.18, blur: 60 },
+      { size: 280, x: '65%', y: '55%', alpha: 0.15, blur: 50 },
+      { size: 220, x: '20%', y: '70%', alpha: 0.12, blur: 40 },
     ]
-  }, [])
+    return base.map((o) => ({ ...o, alpha: lowMotion ? o.alpha * 0.6 : o.alpha }))
+  }, [lowMotion])
 
   return (
     <section className="relative min-h-[100svh] w-full bg-[#10131a] overflow-hidden flex items-center justify-center">
@@ -87,7 +102,7 @@ export default function Hero() {
       {/* Ambient neon video layer */}
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-screen"
+        className="absolute inset-0 w-full h-full object-cover mix-blend-screen transition-opacity duration-500"
         src="/neon-curves.mp4"
         autoPlay
         muted
@@ -95,15 +110,16 @@ export default function Hero() {
         playsInline
         aria-hidden="true"
         poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop stop-color='%2310131a'/%3E%3Cstop offset='1' stop-color='%2310131a'/%3E%3C/linearGradient%3E%3Crect width='1200' height='800' fill='url(%23g)'/%3E%3C/svg%3E"
+        style={{ opacity: lowMotion ? 0.18 : 0.35 }}
       />
 
       {/* Slow rotating neon light beams */}
       <div ref={beamsRef} className="pointer-events-none absolute inset-0">
         <motion.div
           aria-hidden
-          initial={{ rotate: 15, opacity: 0.28 }}
-          animate={{ rotate: 375, opacity: 0.28 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+          initial={{ rotate: 15, opacity: 0.24 }}
+          animate={{ rotate: lowMotion ? 15 + 360 : 375, opacity: lowMotion ? 0.2 : 0.28 }}
+          transition={{ duration: lowMotion ? 90 : 60, repeat: Infinity, ease: 'linear' }}
           className="absolute -inset-1"
           style={{
             background:
@@ -113,9 +129,9 @@ export default function Hero() {
         />
         <motion.div
           aria-hidden
-          initial={{ rotate: -25, opacity: 0.22 }}
-          animate={{ rotate: -385, opacity: 0.22 }}
-          transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
+          initial={{ rotate: -25, opacity: 0.18 }}
+          animate={{ rotate: lowMotion ? -25 - 360 : -385, opacity: lowMotion ? 0.16 : 0.22 }}
+          transition={{ duration: lowMotion ? 120 : 80, repeat: Infinity, ease: 'linear' }}
           className="absolute -inset-1"
           style={{
             background:
@@ -139,9 +155,9 @@ export default function Hero() {
               background: `radial-gradient(circle at 30% 30%, rgba(80,234,255,${o.alpha}), rgba(80,234,255,0) 60%)`,
               filter: `blur(${o.blur}px)`
             }}
-            initial={{ scale: 0.9, opacity: 0.6 }}
-            animate={{ scale: [0.9, 1.05, 0.95, 1.02, 0.9] }}
-            transition={{ duration: 18 + idx * 2, repeat: Infinity, ease: 'easeInOut' }}
+            initial={{ scale: 0.95, opacity: 0.6 }}
+            animate={{ scale: lowMotion ? 1 : [0.9, 1.05, 0.95, 1.02, 0.9] }}
+            transition={{ duration: (lowMotion ? 26 : 18) + idx * 2, repeat: Infinity, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -156,7 +172,7 @@ export default function Hero() {
           className="absolute inset-0 opacity-60"
           initial={{ rotate: 0 }}
           animate={{ rotate: 360 }}
-          transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: lowMotion ? 160 : 120, repeat: Infinity, ease: 'linear' }}
           aria-hidden
         >
           <defs>
@@ -204,8 +220,8 @@ export default function Hero() {
           <motion.h1
             className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight leading-tight text-[#50eaff] drop-shadow-[0_0_30px_rgba(80,234,255,0.35)]"
             initial={{ textShadow: '0 0 0 rgba(80,234,255,0.0)' }}
-            animate={{ textShadow: ['0 0 0 rgba(80,234,255,0.0)', '0 0 24px rgba(80,234,255,0.6)', '0 0 0 rgba(80,234,255,0.0)'] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ textShadow: lowMotion ? '0 0 12px rgba(80,234,255,0.35)' : ['0 0 0 rgba(80,234,255,0.0)', '0 0 24px rgba(80,234,255,0.6)', '0 0 0 rgba(80,234,255,0.0)'] }}
+            transition={{ duration: lowMotion ? 0.001 : 4, repeat: lowMotion ? 0 : Infinity, ease: 'easeInOut' }}
           >
             GepeszOS
           </motion.h1>
@@ -220,7 +236,7 @@ export default function Hero() {
 
           <motion.a
             href="#download"
-            whileHover={{ scale: 1.05, boxShadow: '0 0 36px rgba(80,234,255,0.45)' }}
+            whileHover={lowMotion ? { scale: 1.03 } : { scale: 1.05, boxShadow: '0 0 36px rgba(80,234,255,0.45)' }}
             whileTap={{ scale: 0.98 }}
             className="mt-8 inline-flex items-center gap-2 rounded-full border border-[#50eaff]/30 bg-white/5 backdrop-blur-md px-7 py-3 text-[#f3f6fb] text-base sm:text-lg font-medium transition-all duration-300 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#50eaff]/60"
             style={{ boxShadow: '0 0 18px rgba(80,234,255,0.25)' }}

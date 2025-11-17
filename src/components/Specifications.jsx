@@ -16,8 +16,9 @@ const Item = ({ icon: Icon, title, lines }) => (
 
 export default function Specifications() {
   return (
-    <section className="relative w-full bg-[#10131a] py-20">
-      <div className="mx-auto max-w-6xl px-6">
+    <section id="specs" className="relative w-full bg-[#10131a] py-24">
+      <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(40% 30% at 50% 0%, rgba(80,234,255,0.06), rgba(16,19,26,0) 60%)"}} />
+      <div className="relative mx-auto max-w-6xl px-6">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#f3f6fb] text-center mb-12">Specifications</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Item
